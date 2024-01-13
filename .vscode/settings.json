@@ -1,0 +1,16 @@
+{
+  "files.associations": {
+    "unistd.h": "c"
+  },
+  "C_Cpp.codeAnalysis.clangTidy.checks.disabled": [
+    "clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling"
+  ],
+  "makefile.makefilePath": "makefile",
+  "makefile.launchConfigurations": [
+    {
+      "cwd": "/home/abuchko/school/453/453Proj1",
+      "binaryPath": "/home/abuchko/school/453/453Proj1/scheduler",
+      "binaryArgs": ["foo", "arg1", ":", "bar"]
+    }
+  ]
+}
