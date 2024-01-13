@@ -1,6 +1,6 @@
 #ifndef PROCESS
 #define PROCESS
-#define MAX_ARGS 10
+#define MAX_ARGS 11
 struct Process
 {
     char *name;

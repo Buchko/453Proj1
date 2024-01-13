@@ -1,6 +1,7 @@
 {
   "files.associations": {
-    "unistd.h": "c"
+    "unistd.h": "c",
+    "process.h": "c"
   },
   "C_Cpp.codeAnalysis.clangTidy.checks.disabled": [
     "clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling"
@@ -10,7 +11,7 @@
     {
       "cwd": "/home/abuchko/school/453/453Proj1",
       "binaryPath": "/home/abuchko/school/453/453Proj1/scheduler",
-      "binaryArgs": ["foo", "arg1", ":", "bar"]
+      "binaryArgs": ["ls", ":", "ls", "-l"]
     }
   ]
 }
