@@ -4,7 +4,7 @@ CFLAGS = -Wall -g
 
 
 # Source files
-SRCS = src/main.c src/darr.c src/process.c
+SRCS = src/main.c src/darr.c src/process.c src/dll.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)
