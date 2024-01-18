@@ -61,6 +61,7 @@ dll *parseArgs(int argc, char *argv[])
         process->numArgs++;
     }
 
+    // Making the dll circular
     if (processesTail != NULL)
     {
         processesTail->next = processesHead;
@@ -98,6 +99,7 @@ void schedule(dll *processes)
             printf("process is NULL\n");
             continue;
         }
+        // starting
         process->hasStarted = true;
         int childPid = fork();
         if (childPid == 0)

@@ -20,6 +20,7 @@ dll *dllCreate(void *val)
 }
 
 int dllRemove(dll *node)
+// returns 1 if this deletes the last node in the list, 0 otherwise
 {
     bool onlyOne = (node->next == node);
     if (!onlyOne)
