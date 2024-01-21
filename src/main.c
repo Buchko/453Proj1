@@ -1,5 +1,4 @@
 #include <signal.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,19 +11,12 @@
 #include "process.h"
 
 #define MS 1000
-
-int getNumProcesses(int argc, char *argv[]) {
-  int numColons = 0;
-
-  for (int i = 0; i < argc; i++) {
-    char *currentArg = argv[i];
-    if (strcmp(":", currentArg) == 0) {
-      numColons++;
-    }
-  }
-  int numProcesses = numColons + 1;
-  return numProcesses;
-}
+#define DEBUG false
+#define debug_print(fmt, ...)                                                  \
+  do {                                                                         \
+    if (DEBUG)                                                                 \
+      fprintf(stderr, fmt, __VA_ARGS__);                                       \
+  } while (0)
 
 dll *parseArgs(int argc, char *argv[]) {
   bool isNewProcess = true;
@@ -32,6 +24,7 @@ dll *parseArgs(int argc, char *argv[]) {
   Process *process;
   dll *processesHead = NULL;
   dll *processesTail = NULL;
+
   for (int i = 1; i < argc; i++) {
     isSplit = strcmp(":", argv[i]) == 0;
     if (isSplit) {
@@ -46,10 +39,10 @@ dll *parseArgs(int argc, char *argv[]) {
         processesHead = dllCreate(process);
         processesTail = processesHead;
       } else {
-
         dllAppend(processesHead, &processesTail, process);
       }
     }
+
     // adding the argument. (even if the argument is the name of the process)
     process->args[process->numArgs] = argv[i];
     process->numArgs++;
@@ -64,13 +57,10 @@ dll *parseArgs(int argc, char *argv[]) {
 }
 
 void timer_handler(int signum, siginfo_t *info, void *context) {
-  // This function will be called when the timer expires
-  printf("Timer expired!\n");
-  printf("Passed in int is %d", *(int *)context);
+  debug_print("%s", "Timer expired!\n");
 }
 
-void schedule(dll *processes) {
-  // setting up singnal handling
+void setupTimer() {
   struct itimerval timer;
   struct timeval timeVal = {.tv_sec = 0, .tv_usec = 500 * MS};
   struct timeval intVal = {.tv_sec = 0, .tv_usec = 500 * MS};
@@ -86,35 +76,49 @@ void schedule(dll *processes) {
     perror("sigaction");
     exit(1);
   }
+}
+
+void schedule(dll *processes) {
+  setupTimer();
 
   bool isListEmpty = false;
   while (!isListEmpty) {
     Process *process = processes->val;
     if (process == NULL) {
-      printf("process is NULL\n");
+      printf("process is null\n");
       continue;
     }
-    // starting
-    process->hasStarted = true;
-    int childPid = fork();
-    if (childPid == 0) {
-      execvp(process->name, process->args);
+
+    // starting or continuing the process
+    if (!process->hasStarted) {
+      process->hasStarted = true;
+      int childPid = fork();
+      if (childPid == 0) {
+        debug_print("executing process %s\n", process->name);
+        execvp(process->name, process->args);
+      }
+      process->pid = childPid;
+    } else {
+      debug_print("continuing process %s\n", process->name);
+      kill(process->pid, SIGCONT);
     }
-    waitpid(childPid, NULL, 0);
+
+    // waiting on the process
+    int status = -1;
+    waitpid(process->pid, &status, 0);
+    debug_print("finished waiting, status is %d\n", status);
+
+    // handling either timer interrupt or process exit
     processes = processes->next;
-    isListEmpty = dllRemove((processes->prev));
+    if (WIFEXITED(status)) {
+      isListEmpty = dllRemove((processes->prev));
+    } else {
+      kill(process->pid, SIGSTOP);
+    }
   }
 }
 
 int main(int argc, char *argv[]) {
-  // int numProcesses = getNumProcesses(argc, argv);
   dll *processes = parseArgs(argc, argv);
   schedule(processes);
-
-  // // cleanup
-  // for (int i = 0; i < numProcesses; i++)
-  // {
-  //     free(processes[i]);
-  // }
-  // free(processes);
 }

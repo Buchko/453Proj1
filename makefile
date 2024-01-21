@@ -13,6 +13,7 @@ OBJS = $(SRCS:.c=.o)
 all: $(OBJS)
 	$(CC) $(CFLAGS) -o scheduler $^
 
+
 # Compile source files into object files
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
