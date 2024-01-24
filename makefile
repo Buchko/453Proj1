@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -g -std=c11
+CFLAGS = -Wall -g -std=gnu99
 
 
 # Source files
