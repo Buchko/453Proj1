@@ -1,10 +1,10 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -std=c99
 
 
 # Source files
-SRCS = src/main.c src/darr.c src/process.c src/dll.c
+SRCS = src/main.c src/process.c src/dll.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)

@@ -6,7 +6,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "darr.h"
 #include "dll.h"
 #include "process.h"
 
@@ -18,14 +17,18 @@
       fprintf(stderr, fmt, __VA_ARGS__);                                       \
   } while (0)
 
-dll *parseArgs(int argc, char *argv[]) {
+dll *parseArgs(int argc, char *argv[], int *quantum) {
+  // grabs the quantum and parses the arguements into a circuluar
+  //  doubly linked list of process strucuts
   bool isNewProcess = true;
   bool isSplit;
   Process *process;
   dll *processesHead = NULL;
   dll *processesTail = NULL;
 
-  for (int i = 1; i < argc; i++) {
+  // gettin the quantum
+  *quantum = atoi(argv[1]);
+  for (int i = 2; i < argc; i++) {
     isSplit = strcmp(":", argv[i]) == 0;
     if (isSplit) {
       isNewProcess = true;
@@ -57,29 +60,31 @@ dll *parseArgs(int argc, char *argv[]) {
 }
 
 void timer_handler(int signum, siginfo_t *info, void *context) {
-  debug_print("%s", "Timer expired!\n");
+  debug_print("%s", "Ding!\n");
 }
 
-void setupTimer() {
+void schedule(dll *processes, int quantum) {
+  // does round-robin scheduling on each of the processes
+  //  changing every quantum ms
+
+  // setting up the timer
   struct itimerval timer;
-  struct timeval timeVal = {.tv_sec = 0, .tv_usec = 500 * MS};
-  struct timeval intVal = {.tv_sec = 0, .tv_usec = 500 * MS};
+  debug_print("quantum is %d", quantum);
+  int seconds = quantum / 1000;
+  int ms = quantum % 1000;
+  struct timeval timeVal = {.tv_sec = seconds, .tv_usec = ms * MS};
+  struct timeval intVal = {.tv_sec = 0, .tv_usec = 0};
   timer.it_value = timeVal;
   timer.it_interval = intVal;
-  setitimer(ITIMER_REAL, &timer, NULL);
 
+  // setting up signal handling for the timer
   struct sigaction sa;
   sa.sa_flags = SA_SIGINFO;
   sa.sa_sigaction = timer_handler;
-
   if (sigaction(SIGALRM, &sa, NULL) == -1) {
     perror("sigaction");
     exit(1);
   }
-}
-
-void schedule(dll *processes) {
-  setupTimer();
 
   bool isListEmpty = false;
   while (!isListEmpty) {
@@ -104,6 +109,7 @@ void schedule(dll *processes) {
     }
 
     // waiting on the process
+    setitimer(ITIMER_REAL, &timer, NULL);
     int status = -1;
     waitpid(process->pid, &status, 0);
     debug_print("finished waiting, status is %d\n", status);
@@ -117,8 +123,8 @@ void schedule(dll *processes) {
     }
   }
 }
-
 int main(int argc, char *argv[]) {
-  dll *processes = parseArgs(argc, argv);
-  schedule(processes);
+  int quantum = 0;
+  dll *processes = parseArgs(argc, argv, &quantum); // mutates quantum;
+  schedule(processes, quantum);
 }
